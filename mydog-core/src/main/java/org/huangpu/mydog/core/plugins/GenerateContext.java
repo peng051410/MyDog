@@ -29,7 +29,9 @@ public class GenerateContext {
         }
     };
 
-
+    public static Map<String, MyDogPlugin> getPluginMap(){
+    	return pluginMap;
+    }
 
     public static <T> T get(String key){
         return (T)genPropMap.get().get(key);
@@ -123,7 +125,7 @@ public class GenerateContext {
     /**
      * //TODO: 新的设计是不在将依赖的属性添加到自己的属性中,而是将所有属性放入ThreadLocal,按需要获取.
      * 添加依赖
-     * @param pluginList
+     *
      *//*
     public static void addDependencies(List<MyDogPlugin> pluginList) {
         pluginList.stream().forEach(plugin -> {
@@ -157,4 +159,5 @@ public class GenerateContext {
 
         });
     }*/
+
 }
