@@ -7701,8 +7701,9 @@ body.md-skin {
   width: 50%;
 }
 .mydog-plugins-add{
-  float: right;
-  margin-right: 10px;
+  position: fixed;
+  top: 170px;
+  right: 50px;
   width: 50px;
   z-index: 9999;
 }
@@ -7735,6 +7736,10 @@ body.md-skin {
   font-size: 8px;
   padding: 1px 2px;
 }
-.mydog-plugins-add .form-group label {
-  font-size: 18px;
+.mydog-plugins-wrapper .form-group label {
+  font-size: 15px;
+  font-weight: 200;
+}
+.mydog-introduce{
+  padding: 10px 0;
 }

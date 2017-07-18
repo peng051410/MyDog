@@ -1,4 +1,4 @@
-package org.huangpu.mydog.plugins.entity;
+package org.huangpu.mydog.plugins.ormapping;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -6,14 +6,16 @@ import com.google.common.base.Strings;
 import org.huangpu.mydog.core.Preserver;
 import org.huangpu.mydog.core.plugins.GenerateContext;
 import org.huangpu.mydog.core.utils.DDLUtils;
+import org.huangpu.mydog.core.utils.FileUtil;
+import org.mybatis.generator.api.MyBatisGenerator;
 import org.mybatis.generator.api.ProgressCallback;
 import org.mybatis.generator.api.ShellCallback;
 import org.mybatis.generator.config.*;
 import org.mybatis.generator.internal.DefaultShellCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.mybatis.generator.api.MyBatisGenerator;
 
+import java.io.File;
 import java.util.*;
 
 
@@ -54,11 +56,29 @@ public class MyBatisPreserver implements Preserver<MyBatisOutputItem> {
         }
     }
 
+    // 使用generator生成文件前先删除旧文件：解决mybatis 生成xml文件内容重复问题，
+    public void clearMybatisGenFiles(){
+
+        String targetProject = generatorConfig.getTargetProject();
+        String clientPackage = generatorConfig.getClientGeneratorTargetPackage();
+        String modelPackage = generatorConfig.getModelGeneratorTargetPackage();
+
+        String clientPath = clientPackage.replace(".", File.separator);
+        String modelPath = modelPackage.replace(".", File.separator);
+
+        FileUtil.delAllFile(targetProject+clientPath,false);
+        FileUtil.delAllFile(targetProject+modelPath,false);
+
+    }
+
     public void generate() throws Exception {
+
+        clearMybatisGenFiles();
+
         Configuration config = new Configuration();
         String connectorLibPath = generatorConfig.getConnectorJarFilePath();
 
-        LOG.info("connectorLibPath: {}", connectorLibPath);
+        LOG.debug("connectorLibPath: {}", connectorLibPath);
         config.addClasspathEntry(connectorLibPath);
         Context context = new Context(ModelType.CONDITIONAL);
         config.addContext(context);
@@ -73,6 +93,11 @@ public class MyBatisPreserver implements Preserver<MyBatisOutputItem> {
             TableConfiguration tableConfig = new TableConfiguration(context);
             tableConfig.setTableName(DDLUtils.getTbName(domainName));
             tableConfig.setDomainObjectName(domainName);
+
+//            tableConfig.setSelectByPrimaryKeyStatementEnabled(false);
+//            tableConfig.setSelectByExampleStatementEnabled(false);
+//            tableConfig.setUpdateByExampleStatementEnabled(false);
+//            tableConfig.setUpdateByPrimaryKeyStatementEnabled(false);
 
             // add ignore columns
             if (ignoredColumns != null) {
@@ -89,7 +114,7 @@ public class MyBatisPreserver implements Preserver<MyBatisOutputItem> {
             fields.stream().forEach(obj ->{
                 JSONObject field = (JSONObject)obj;
                 ColumnOverride col = new ColumnOverride(field.getString("fieldName"));
-                col.addProperty("null",field.getString("null"));
+                col.addProperty("null",field.getString("isNull"));
                 col.addProperty("length",field.getString("length"));
                 col.addProperty("type", field.getString("fieldType"));
                 JSONArray validates = field.getJSONArray("validates");
@@ -100,7 +125,10 @@ public class MyBatisPreserver implements Preserver<MyBatisOutputItem> {
                 tableConfig.addColumnOverride(col);
             });
             context.addTableConfiguration(tableConfig);
+
         });
+
+
 
         context.setId("myid");
 
@@ -132,6 +160,8 @@ public class MyBatisPreserver implements Preserver<MyBatisOutputItem> {
         daoConfig.setImplementationPackage(generatorConfig.getTargetProject());
         context.setJavaClientGeneratorConfiguration(daoConfig);
 
+
+
         // Comment
         CommentGeneratorConfiguration commentConfig = new CommentGeneratorConfiguration();
         // commentConfig.setConfigurationType(DbRemarksCommentGenerator.class.getName());
@@ -153,7 +183,7 @@ public class MyBatisPreserver implements Preserver<MyBatisOutputItem> {
             PluginConfiguration pc = new PluginConfiguration();
             pc.setConfigurationType(plugin);
             context.addPluginConfiguration(pc);
-            LOG.info("add plugin = {}" , plugin);
+            LOG.debug("add plugin = {}" , plugin);
         }
 
         List<String> warnings = new ArrayList<>();
