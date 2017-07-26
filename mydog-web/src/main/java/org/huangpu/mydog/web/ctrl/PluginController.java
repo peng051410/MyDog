@@ -52,7 +52,9 @@ public class PluginController {
 	@PostMapping("/mydogPlugins")
 	@ResponseBody
 	public AjaxResult buildJsonDemo(@RequestBody() MyDogPluginsParams myDogPluginsParams) {
-		return null;
+		AjaxResult result = AjaxResult.prepare();
+		System.out.println(myDogPluginsParams);
+		return result;
 	}
 	
 }
